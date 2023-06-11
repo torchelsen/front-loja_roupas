@@ -2,7 +2,9 @@
 
 function Footer(){
     return (
-        <footer>Entre em contato conosco</footer>
+        <footer>
+            <p>Projeto de Sistema para uma Loja física de Roupas</p>
+        </footer>
     );
 }
 

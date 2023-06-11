@@ -1,109 +1,114 @@
-import "./Produtos.css";
 import axios from "axios";
 import { useState, useEffect } from "react";
 
-function Produtos() {
-  // Entidades e listas utilizadas na página
-  const [produto, setProduto] = useState(null);
-  const [produtos, setProdutos] = useState([]);
+function Vendas() {
+  const [venda, setVenda] = useState(null);
+  const [vendas, setVendas] = useState([]);
 
-  // Funções de carregamento de dados do backend
-  function getProdutos() {
-    axios.get("http://localhost:3005/produto").then((resposta) => {
-      setProdutos(resposta.data);
+  function getVendas() {
+    axios.get("http://localhost:3005/venda").then((resposta) => {
+      setVendas(resposta.data);
     });
   }
 
   useEffect(() => {
-    getProdutos();
+    getVendas();
   }, []);
 
-  // Funções para manipulação da entidade principal
-  function novoProduto() {
-    setProduto({
-      descricao: "",
+  function novaVenda() {
+    setVenda({
+      codigo: 0,
+      dataVenda: null,
+      valorTotal: 0
     });
   }
 
-  function alterarProduto(campo, valor, id) {
-    setProduto({
-      _id: id,
-      [campo]: valor,
-    });
+  function alterarVenda(campo, valor) {
+    setVenda((prevVenda) => ({
+      ...prevVenda,
+      [campo]: valor
+    }));
   }
 
-  function excluirProduto(id) {
-    axios.delete("http://localhost:3005/produto/" + id).then(() => {
+  function excluirVenda(id) {
+    axios.delete("http://localhost:3005/venda/" + id).then(() => {
       reiniciarEstadoDosObjetos();
     });
   }
 
-  function salvarProduto() {
-    if (produto._id) {
-      axios.put("http://localhost:3005/produto/" + produto._id, produto).then(() => {
+  function salvarVenda() {
+    if (venda._id) {
+      axios.put("http://localhost:3005/venda/" + venda._id, venda).then(() => {
         reiniciarEstadoDosObjetos();
       });
     } else {
-      axios.post("http://localhost:3005/produto", produto).then(() => {
+      axios.post("http://localhost:3005/venda", venda).then(() => {
         reiniciarEstadoDosObjetos();
       });
     }
   }
 
   function reiniciarEstadoDosObjetos() {
-    setProduto(null);
-    getProdutos();
+    setVenda(null);
+    getVendas();
   }
 
-  // Função para geração do formulário
   function getFormulario() {
     return (
       <form>
-        <label>Descrição</label>
+        <label>Código</label>
         <input
-          type="text"
-          name="descricao"
-          value={produto.descricao}
+          type="number"
+          name="codigo"
+          value={venda.codigo}
           onChange={(e) => {
-            alterarProduto(e.target.name, e.target.value, produto._id);
+            alterarVenda(e.target.name, parseInt(e.target.value));
           }}
         />
-        <button
-          type="button"
-          onClick={() => {
-            salvarProduto();
+        <label>Data da Venda</label>
+        <input
+          type="date"
+          name="dataVenda"
+          value={venda.dataVenda}
+          onChange={(e) => {
+            alterarVenda(e.target.name, e.target.value);
           }}
-        >
+        />
+        <label>Valor Total</label>
+        <input
+          type="number"
+          name="valorTotal"
+          value={venda.valorTotal}
+          onChange={(e) => {
+            alterarVenda(e.target.name, parseFloat(e.target.value));
+          }}
+        />
+        <button type="button" onClick={salvarVenda}>
           Salvar
         </button>
-        <button
-          type="button"
-          onClick={() => {
-            setProduto(null);
-          }}
-        >
+        <button type="button" onClick={() => setVenda(null)}>
           Cancelar
         </button>
       </form>
     );
   }
 
-  // Funções para geração da tabela
-  function getLinhaDaTabela(produto) {
+  function getLinhaDaTabela(venda) {
     return (
-      <tr key={produto._id}>
-        <td>{produto._id}</td>
-        <td>{produto.descricao}</td>
+      <tr key={venda._id}>
+        <td>{venda.codigo}</td>
+        <td>{venda.dataVenda}</td>
+        <td>{venda.valorTotal}</td>
         <td>
           <button
             type="button"
             onClick={() => {
               if (
                 window.confirm(
-                  "Confirmar a exclusão do produto " + produto.descricao + "?"
+                  "Confirmar a exclusão da venda com código " + venda.codigo + "?"
                 )
               ) {
-                excluirProduto(produto._id);
+                excluirVenda(venda._id);
               }
             }}
           >
@@ -112,7 +117,7 @@ function Produtos() {
           <button
             type="button"
             onClick={() => {
-              setProduto(produto);
+              setVenda(venda);
             }}
           >
             Editar
@@ -123,12 +128,7 @@ function Produtos() {
   }
 
   function getLinhasDaTabela() {
-    const linhasDaTabela = [];
-    for (let i = 0; i < produtos.length; i++) {
-      const produto = produtos[i];
-      linhasDaTabela[i] = getLinhaDaTabela(produto);
-    }
-    return linhasDaTabela;
+    return vendas.map((venda) => getLinhaDaTabela(venda));
   }
 
   function getTabela() {
@@ -136,8 +136,9 @@ function Produtos() {
       <table>
         <tbody>
           <tr>
-            <th>ID</th>
-            <th>Descrição</th>
+            <th>Código</th>
+            <th>Data da Venda</th>
+            <th>Valor Total</th>
             <th>Ações</th>
           </tr>
           {getLinhasDaTabela()}
@@ -146,18 +147,12 @@ function Produtos() {
     );
   }
 
-  // Função do conteúdo principal
   function getConteudo() {
-    if (produto == null) {
+    if (venda == null) {
       return (
         <>
-          <button
-            type="button"
-            onClick={() => {
-              novoProduto();
-            }}
-          >
-            Novo produto
+          <button type="button" onClick={novaVenda}>
+            Nova venda
           </button>
           {getTabela()}
         </>
@@ -168,14 +163,13 @@ function Produtos() {
   }
 
   return (
-    <div className="produtos">
-      {/* Replace <Aside /> with appropriate component for Produtos */}
+    <div className="vendas">
       <div className="conteudo">
-        <h2>Cadastro de produtos</h2>
+        <h2>Cadastro de vendas</h2>
         {getConteudo()}
       </div>
     </div>
   );
 }
 
-export default Produtos;
+export default Vendas;

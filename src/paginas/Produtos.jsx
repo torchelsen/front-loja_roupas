@@ -1,13 +1,10 @@
-import "./Produtos.css";
 import axios from "axios";
 import { useState, useEffect } from "react";
 
 function Produtos() {
-  // Entidades e listas utilizadas na página
   const [produto, setProduto] = useState(null);
   const [produtos, setProdutos] = useState([]);
 
-  // Funções de carregamento de dados do backend
   function getProdutos() {
     axios.get("http://localhost:3005/produto").then((resposta) => {
       setProdutos(resposta.data);
@@ -18,22 +15,24 @@ function Produtos() {
     getProdutos();
   }, []);
 
-  // Funções para manipulação da entidade principal
   function novoProduto() {
     setProduto({
-      descricao: "",
+      codigo: 0,
+      qtdEstoque: 0,
+      valor: 0,
+      nomeProduto: ""
     });
   }
 
-  function alterarProduto(campo, valor, codigo) {
-    setProduto({
-      codigo: codigo,
-      [campo]: valor,
-    });
+  function alterarProduto(campo, valor) {
+    setProduto((prevProduto) => ({
+      ...prevProduto,
+      [campo]: valor
+    }));
   }
 
-  function excluirProduto(codigo) {
-    axios.delete("http://localhost:3005/produto/" + codigo).then(() => {
+  function excluirProduto(id) {
+    axios.delete("http://localhost:3005/produto/" + id).then(() => {
       reiniciarEstadoDosObjetos();
     });
   }
@@ -55,55 +54,72 @@ function Produtos() {
     getProdutos();
   }
 
-  // Função para geração do formulário
   function getFormulario() {
     return (
       <form>
-        <label>Descrição</label>
+        <label>Código</label>
         <input
-          type="text"
-          name="descricao"
-          value={produto.descricao}
+          type="number"
+          name="codigo"
+          value={produto.codigo}
           onChange={(e) => {
-            alterarProduto(e.target.name, e.target.value, produto.codigo);
+            alterarProduto(e.target.name, parseInt(e.target.value));
           }}
         />
-        <button
-          type="button"
-          onClick={() => {
-            salvarProduto();
+        <label>Quantidade em Estoque</label>
+        <input
+          type="number"
+          name="qtdEstoque"
+          value={produto.qtdEstoque}
+          onChange={(e) => {
+            alterarProduto(e.target.name, parseInt(e.target.value));
           }}
-        >
+        />
+        <label>Valor</label>
+        <input
+          type="number"
+          name="valor"
+          value={produto.valor}
+          onChange={(e) => {
+            alterarProduto(e.target.name, parseFloat(e.target.value));
+          }}
+        />
+        <label>Nome do Produto</label>
+        <input
+          type="text"
+          name="nomeProduto"
+          value={produto.nomeProduto}
+          onChange={(e) => {
+            alterarProduto(e.target.name, e.target.value);
+          }}
+        />
+        <button type="button" onClick={salvarProduto}>
           Salvar
         </button>
-        <button
-          type="button"
-          onClick={() => {
-            setProduto(null);
-          }}
-        >
+        <button type="button" onClick={() => setProduto(null)}>
           Cancelar
         </button>
       </form>
     );
   }
 
-  // Funções para geração da tabela
   function getLinhaDaTabela(produto) {
     return (
-      <tr key={produto.codigo}>
+      <tr key={produto._id}>
         <td>{produto.codigo}</td>
-        <td>{produto.descricao}</td>
+        <td>{produto.qtdEstoque}</td>
+        <td>{produto.valor}</td>
+        <td>{produto.nomeProduto}</td>
         <td>
           <button
             type="button"
             onClick={() => {
               if (
                 window.confirm(
-                  "Confirmar a exclusão do produto " + produto.descricao + "?"
+                  "Confirmar a exclusão do produto " + produto.nomeProduto + "?"
                 )
               ) {
-                excluirProduto(produto.codigo);
+                excluirProduto(produto._id);
               }
             }}
           >
@@ -123,12 +139,7 @@ function Produtos() {
   }
 
   function getLinhasDaTabela() {
-    const linhasDaTabela = [];
-    for (let i = 0; i < produtos.length; i++) {
-      const produto = produtos[i];
-      linhasDaTabela[i] = getLinhaDaTabela(produto);
-    }
-    return linhasDaTabela;
+    return produtos.map((produto) => getLinhaDaTabela(produto));
   }
 
   function getTabela() {
@@ -136,8 +147,10 @@ function Produtos() {
       <table>
         <tbody>
           <tr>
-            <th>codigo</th>
-            <th>Descrição</th>
+            <th>Código</th>
+            <th>Quantidade em Estoque</th>
+            <th>Valor</th>
+            <th>Nome do Produto</th>
             <th>Ações</th>
           </tr>
           {getLinhasDaTabela()}
@@ -146,17 +159,11 @@ function Produtos() {
     );
   }
 
-  // Função do conteúdo principal
   function getConteudo() {
     if (produto == null) {
       return (
         <>
-          <button
-            type="button"
-            onClick={() => {
-              novoProduto();
-            }}
-          >
+          <button type="button" onClick={novoProduto}>
             Novo produto
           </button>
           {getTabela()}
@@ -169,7 +176,6 @@ function Produtos() {
 
   return (
     <div className="produtos">
-      {/* Replace <Aside /> with appropriate component for Produtos */}
       <div className="conteudo">
         <h2>Cadastro de produtos</h2>
         {getConteudo()}
